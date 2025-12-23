@@ -9,31 +9,32 @@ let state = {
 
 async function init() {
     const savedState = localStorage.getItem(STORAGE_KEY);
-    
+
     if (savedState) {
         state = JSON.parse(savedState);
         render();
     } else {
         await loadConfigAndShuffle();
     }
-    
+
     resetBtn.addEventListener('click', handleReset);
 }
 
 async function loadConfigAndShuffle() {
     try {
-        const response = await fetch('config.json');
+        // Add cache-busting timestamp
+        const response = await fetch(`config.json?t=${Date.now()}`);
         const config = await response.json();
-        
+
         // Shuffle the config
         const shuffled = [...config].sort(() => Math.random() - 0.5);
-        
+
         // Take first 16 (or all if less)
         state.cells = shuffled.slice(0, 16).map(text => ({
             text,
             checked: false
         }));
-        
+
         state.initialized = true;
         saveState();
         render();
@@ -50,7 +51,12 @@ function saveState() {
 function toggleCell(index) {
     state.cells[index].checked = !state.cells[index].checked;
     saveState();
-    render();
+
+    // Update only the specific cell DOM element
+    const cellEl = document.querySelector(`[data-index="${index}"]`);
+    if (cellEl) {
+        cellEl.classList.toggle('checked', state.cells[index].checked);
+    }
 }
 
 function handleReset() {
@@ -62,15 +68,16 @@ function handleReset() {
 
 function render() {
     gridContainer.innerHTML = '';
-    
+
     state.cells.forEach((cell, index) => {
         const cellEl = document.createElement('div');
         cellEl.className = `bingo-cell ${cell.checked ? 'checked' : ''}`;
         cellEl.textContent = cell.text;
+        cellEl.setAttribute('data-index', index);
         cellEl.style.animationDelay = `${index * 0.05}s`;
-        
+
         cellEl.addEventListener('click', () => toggleCell(index));
-        
+
         gridContainer.appendChild(cellEl);
     });
 }
