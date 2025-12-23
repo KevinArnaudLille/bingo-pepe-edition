@@ -1,11 +1,11 @@
 :root {
-    --bg-color: #020617;
-    --card-bg: rgba(30, 41, 59, 0.4);
-    --card-border: rgba(255, 255, 255, 0.08);
-    --accent-color: #38bdf8;
-    --accent-glow: rgba(56, 189, 248, 0.4);
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
+    --bg-color: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.7);
+    --card-border: rgba(0, 0, 0, 0.05);
+    --accent-color: #0ea5e9;
+    --accent-glow: rgba(14, 165, 233, 0.2);
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
     --checked-bg: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
     --checked-text: #ffffff;
     --font-main: 'Outfit', sans-serif;
@@ -21,8 +21,8 @@
 body {
     background-color: var(--bg-color);
     background-image:
-        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.15) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.08) 0px, transparent 50%);
     color: var(--text-primary);
     font-family: var(--font-main);
     min-height: 100vh;
@@ -50,7 +50,7 @@ h1 {
     font-size: 3rem;
     font-weight: 700;
     letter-spacing: -0.02em;
-    background: linear-gradient(to right, #38bdf8, #818cf8);
+    background: linear-gradient(to right, #0ea5e9, #6366f1);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -61,7 +61,6 @@ h1 {
     color: var(--text-secondary);
     font-size: 1.1rem;
     font-weight: 400;
-    opacity: 0.8;
 }
 
 .grid-container {
@@ -85,15 +84,15 @@ h1 {
     line-height: 1.2;
     font-weight: 500;
     cursor: pointer;
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, color 0.3s ease;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     user-select: none;
     aspect-ratio: 1 / 1;
     color: var(--text-secondary);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    opacity: 0;
-    /* For animation */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    opacity: 1;
+    /* Changed from 0 to 1 to prevent disappearing if animation is overridden */
 }
 
 .bingo-cell:active {
@@ -103,10 +102,29 @@ h1 {
 .bingo-cell.checked {
     background: var(--checked-bg);
     color: var(--checked-text);
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 0 25px var(--accent-glow);
+    border-color: transparent;
+    box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.3);
     font-weight: 700;
     transform: scale(1.02);
+}
+
+.bingo-cell.winning {
+    animation: pulse 1s ease-in-out infinite alternate;
+    z-index: 10;
+    opacity: 1;
+    /* Ensure visibility */
+}
+
+@keyframes pulse {
+    from {
+        transform: scale(1.02);
+        box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
+    }
+
+    to {
+        transform: scale(1.08);
+        box-shadow: 0 0 25px rgba(14, 165, 233, 0.6);
+    }
 }
 
 .loader {
@@ -124,8 +142,8 @@ footer {
 }
 
 .secondary-btn {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(0, 0, 0, 0.05);
     color: var(--text-secondary);
     padding: 0.8rem 2rem;
     border-radius: 9999px;
@@ -138,7 +156,7 @@ footer {
 }
 
 .secondary-btn:active {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.05);
     transform: translateY(2px);
 }
 
@@ -156,5 +174,6 @@ footer {
 }
 
 .bingo-cell {
-    animation: fadeInScale 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: fadeInScale 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    /* Changed forwards to backwards to handle initial opacity 0 in animation */
 }

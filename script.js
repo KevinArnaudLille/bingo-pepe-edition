@@ -4,7 +4,8 @@ const resetBtn = document.getElementById('reset-btn');
 
 let state = {
     cells: [], // { text: string, checked: boolean }
-    initialized: false
+    initialized: false,
+    victoryTriggered: false
 };
 
 async function init() {
@@ -12,6 +13,8 @@ async function init() {
 
     if (savedState) {
         state = JSON.parse(savedState);
+        // Ensure new state properties exist for backward compatibility
+        if (state.victoryTriggered === undefined) state.victoryTriggered = false;
         render();
     } else {
         await loadConfigAndShuffle();
@@ -36,6 +39,7 @@ async function loadConfigAndShuffle() {
         }));
 
         state.initialized = true;
+        state.victoryTriggered = false;
         saveState();
         render();
     } catch (error) {
@@ -57,11 +61,89 @@ function toggleCell(index) {
     if (cellEl) {
         cellEl.classList.toggle('checked', state.cells[index].checked);
     }
+
+    checkBingo(true); // Pass true to allow victory trigger on click
+}
+
+function checkBingo(isManualClick = false) {
+    const size = 4;
+    const grid = [];
+    for (let i = 0; i < size; i++) {
+        grid.push(state.cells.slice(i * size, (i + 1) * size));
+    }
+
+    let winningIndices = new Set();
+
+    // Check rows
+    for (let r = 0; r < size; r++) {
+        if (grid[r].every(cell => cell.checked)) {
+            for (let c = 0; c < size; c++) winningIndices.add(r * size + c);
+        }
+    }
+
+    // Check columns
+    for (let c = 0; c < size; c++) {
+        let colChecked = true;
+        for (let r = 0; r < size; r++) {
+            if (!grid[r][c].checked) colChecked = false;
+        }
+        if (colChecked) {
+            for (let r = 0; r < size; r++) winningIndices.add(r * size + c);
+        }
+    }
+
+    // Check diagonals
+    let diag1Checked = true;
+    for (let i = 0; i < size; i++) {
+        if (!grid[i][i].checked) diag1Checked = false;
+    }
+    if (diag1Checked) {
+        for (let i = 0; i < size; i++) winningIndices.add(i * size + i);
+    }
+
+    let diag2Checked = true;
+    for (let i = 0; i < size; i++) {
+        if (!grid[i][size - 1 - i].checked) diag2Checked = false;
+    }
+    if (diag2Checked) {
+        for (let i = 0; i < size; i++) winningIndices.add(i * size + (size - 1 - i));
+    }
+
+    // Update winning cells visuals
+    document.querySelectorAll('.bingo-cell').forEach((el, idx) => {
+        el.classList.toggle('winning', winningIndices.has(idx));
+    });
+
+    // Trigger victory only if it's a manual click and victory hasn't been triggered yet for this bingo
+    if (winningIndices.size > 0 && isManualClick && !state.victoryTriggered) {
+        state.victoryTriggered = true;
+        saveState();
+        triggerVictory();
+    } else if (winningIndices.size === 0) {
+        // Reset victory flag if no bingo is present (user unchecked a cell)
+        state.victoryTriggered = false;
+        saveState();
+    }
+}
+
+function triggerVictory() {
+    confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#0ea5e9', '#6366f1', '#f43f5e']
+    });
 }
 
 function handleReset() {
     if (confirm('Are you sure you want to reset the board? This will reshuffle everything.')) {
         localStorage.removeItem(STORAGE_KEY);
+        // Reset local state object to be safe
+        state = {
+            cells: [],
+            initialized: false,
+            victoryTriggered: false
+        };
         loadConfigAndShuffle();
     }
 }
@@ -80,6 +162,8 @@ function render() {
 
         gridContainer.appendChild(cellEl);
     });
+
+    checkBingo(false); // Initial render check, don't trigger confetti
 }
 
 // Start the app
